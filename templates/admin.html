@@ -1,70 +1,183 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Admin Dashboard</title>
+    <meta charset="UTF-8">
+    <title>教师管理后台</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background: #fff;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        form {
+            width: 60%;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        label {
+            display: inline-block;
+            width: 100px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"] {
+            width: calc(100% - 120px);
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .section {
+            margin: 40px 0;
+        }
+    </style>
 </head>
 <body>
     <h1>Admin Panel</h1>
 
+    <!-- Students Table -->
     <h2>Students</h2>
-    <ul>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Password</th>
+        </tr>
         {% for student in students %}
-            <li>ID: {{ student[0] }}, Name: {{ student[1] }}</li>
+        <tr>
+            <td>{{ student[0] }}</td>
+            <td>{{ student[1] }}</td>
+            <td>{{ student[2] }}</td>
+        </tr>
         {% endfor %}
-    </ul>
+    </table>
 
+    <!-- Courses Table -->
     <h2>Courses</h2>
-    <ul>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Student ID</th>
+            <th>Course Name</th>
+            <th>Score</th>
+        </tr>
         {% for course in courses %}
-            <li>ID: {{ course[0] }}, Student ID: {{ course[1] }}, Name: {{ course[2] }}, Score: {{ course[3] }}</li>
+        <tr>
+            <td>{{ course[0] }}</td>
+            <td>{{ course[1] }}</td>
+            <td>{{ course[2] }}</td>
+            <td>{{ course[3] }}</td>
+        </tr>
         {% endfor %}
-    </ul>
+    </table>
 
-    <h3>Add Student</h3>
-    <form method="post">
-        <input type="hidden" name="action" value="add_student">
-        Name: <input type="text" name="student_name">
-        <button type="submit">Add</button>
-    </form>
+    <!-- Add Student -->
+    <div class="section">
+        <form method="post">
+            <input type="hidden" name="action" value="add_student">
+            <label for="student_name">Student Name:</label>
+            <input type="text" id="student_name" name="student_name" required>
+            <button type="submit">Add Student</button>
+        </form>
+    </div>
 
-    <h3>Delete Student</h3>
-    <form method="post">
-        <input type="hidden" name="action" value="delete_student">
-        ID: <input type="text" name="student_id">
-        <button type="submit">Delete</button>
-    </form>
+    <!-- Delete Student -->
+    <div class="section">
+        <form method="post">
+            <input type="hidden" name="action" value="delete_student">
+            <label for="student_id">Student ID:</label>
+            <input type="number" id="student_id" name="student_id" required>
+            <button type="submit">Delete Student</button>
+        </form>
+    </div>
 
-    <h3>Update Student</h3>
-    <form method="post">
-        <input type="hidden" name="action" value="update_student">
-        ID: <input type="text" name="student_id">
-        New Name: <input type="text" name="new_name">
-        <button type="submit">Update</button>
-    </form>
+    <!-- Update Student -->
+    <div class="section">
+        <form method="post">
+            <input type="hidden" name="action" value="update_student">
+            <label for="student_id_update">Student ID:</label>
+            <input type="number" id="student_id_update" name="student_id" required>
+            <label for="new_name">New Name:</label>
+            <input type="text" id="new_name" name="new_name" required>
+            <button type="submit">Update Student</button>
+        </form>
+    </div>
 
-    <h3>Add Course</h3>
-    <form method="post">
-        <input type="hidden" name="action" value="add_course">
-        Student ID: <input type="text" name="stu_id">
-        Name: <input type="text" name="course_name">
-        Score: <input type="text" name="course_score">
-        <button type="submit">Add</button>
-    </form>
+    <!-- Add Course -->
+    <div class="section">
+        <form method="post">
+            <input type="hidden" name="action" value="add_course">
+            <label for="stu_id">Student ID:</label>
+            <input type="number" id="stu_id" name="stu_id" required>
+            <label for="course_name">Course Name:</label>
+            <input type="text" id="course_name" name="course_name" required>
+            <label for="course_score">Course Score:</label>
+            <input type="number" id="course_score" name="course_score" required>
+            <button type="submit">Add Course</button>
+        </form>
+    </div>
 
-    <h3>Delete Course</h3>
-    <form method="post">
-        <input type="hidden" name="action" value="delete_course">
-        ID: <input type="text" name="course_id">
-        <button type="submit">Delete</button>
-    </form>
+    <!-- Delete Course -->
+    <div class="section">
+        <form method="post">
+            <input type="hidden" name="action" value="delete_course">
+            <label for="course_id">Course ID:</label>
+            <input type="number" id="course_id" name="course_id" required>
+            <button type="submit">Delete Course</button>
+        </form>
+    </div>
 
-    <h3>Update Course</h3>
-    <form method="post">
-        <input type="hidden" name="action" value="update_course">
-        ID: <input type="text" name="course_id">
-        New Name: <input type="text" name="new_name">
-        New Score: <input type="text" name="new_score">
-        <button type="submit">Update</button>
-    </form>
+    <!-- Update Course -->
+    <div class="section">
+        <form method="post">
+            <input type="hidden" name="action" value="update_course">
+            <label for="course_id_update">Course ID:</label>
+            <input type="number" id="course_id_update" name="course_id" required>
+            <label for="new_course_name">New Course Name:</label>
+            <input type="text" id="new_course_name" name="new_name" required>
+            <label for="new_score">New Score:</label>
+            <input type="number" id="new_score" name="new_score" required>
+            <button type="submit">Update Course</button>
+        </form>
+    </div>
 </body>
 </html>

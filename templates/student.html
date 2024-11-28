@@ -2,55 +2,106 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>成绩展示</title>
+    <title>学生成绩查询</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
         }
-        table {
-            width: 50%;
-            margin: 20px auto;
-            border-collapse: collapse;
-            text-align: left;
-        }
-        th, td {
-            padding: 12px;
-            border-bottom: 1px solid #ddd;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        tr:hover {
-            background-color: #f5f5f5;
+        h2 {
+            text-align: center;
+            margin: 20px 0;
+            color: #333;
         }
         form {
             text-align: center;
-            margin-bottom: 20px;
+            margin: 20px 0;
+            padding: 10px;
+        }
+        label {
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        input[type="text"] {
+            width: 200px;
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input[type="submit"] {
+            padding: 8px 16px;
+            font-size: 14px;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background: #fff;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
         }
     </style>
 </head>
 <body>
-    <h2 style="text-align: center;">课程成绩展示</h2>
+    <h2>课程成绩展示</h2>
 
-    <form method="GET" action="/">
+    <!-- 搜索表单 -->
+    <form method="GET" action="/student">
         <label for="student_name">学生姓名:</label>
-        <input type="text" id="student_name" name="student_name" value="{{ student_name }}">
+        <input type="text" id="student_name" name="student_name" value="{{ student_name }}" placeholder="请输入学生姓名">
         <input type="submit" value="查询">
     </form>
 
+    <!-- 数据表格 -->
     <table>
-        <tr>
-            <th>学生姓名</th>
-            <th>课程名</th>
-            <th>课程成绩</th>
-        </tr>
-        {% for row in results %}
-        <tr>
-            <td>{{ row[0] }}</td>
-            <td>{{ row[1] }}</td>
-            <td>{{ row[2] }}</td>
-        </tr>
-        {% endfor %}
+        <thead>
+            <tr>
+                <th>学生姓名</th>
+                <th>课程名</th>
+                <th>课程成绩</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if results and results|length > 0 %}
+                {% for row in results %}
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                    <td>{{ row[2] }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="3">没有找到相关数据</td>
+                </tr>
+            {% endif %}
+        </tbody>
     </table>
 </body>
 </html>
