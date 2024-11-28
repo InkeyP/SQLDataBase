@@ -161,7 +161,7 @@ def login():
         if user_type == 'student':
             conn = sqlite3.connect('example.db')
             cursor = conn.cursor()
-            query = f"SELECT * FROM students WHERE student_name = '{username}' AND student_password = '{password}' "
+            query = f"SELECT * FROM students WHERE student_name = '{username}' AND student_password = '{password}'"
             cursor.execute(query)
             stu = cursor.fetchone()
             conn.close()
@@ -170,12 +170,13 @@ def login():
                 session['student_logged_in'] = True
                 return redirect('/student')
             else:
-                error = "错误的用户名或密码"
+                error = "错误的账号或密码"
 
         if user_type == 'teacher':
             conn = sqlite3.connect('example.db')
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM admin WHERE username = ? AND password = ?", (username, password))
+            query = f"SELECT * FROM admin WHERE username = '{username}' AND password = '{password}'"
+            cursor.execute(query)
             admin = cursor.fetchone()
             conn.close()
 
@@ -184,7 +185,7 @@ def login():
                 session['admin_username'] = username
                 return redirect('/admin')
             else:
-                error = "错误的用户名或密码"
+                error = "错误的账号或密码"
 
     return render_template('index.html', error=error)
 

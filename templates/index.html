@@ -85,6 +85,9 @@
             background-color: #0056b3;
             border-color: #0056b3;
         }
+        .alert {
+            margin-top: 10px;
+        }
         footer {
             text-align: center;
             margin-top: 20px;
@@ -99,6 +102,12 @@
         <div class="login-form-container">
             <!-- 标题 -->
             <h2>教育管理系统</h2>
+            <!-- 错误提示 -->
+            {% if error %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endif %}
             <!-- 学生与教师切换按钮 -->
             <div class="btn-toggle">
                 <button id="student-button" class="active" type="button" onclick="setLoginType('student')">学生</button>
