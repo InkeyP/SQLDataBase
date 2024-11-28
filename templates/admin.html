@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+</head>
+<body>
+    <h1>Admin Panel</h1>
+
+    <h2>Students</h2>
+    <ul>
+        {% for student in students %}
+            <li>ID: {{ student[0] }}, Name: {{ student[1] }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Courses</h2>
+    <ul>
+        {% for course in courses %}
+            <li>ID: {{ course[0] }}, Student ID: {{ course[1] }}, Name: {{ course[2] }}, Score: {{ course[3] }}</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Add Student</h3>
+    <form method="post">
+        <input type="hidden" name="action" value="add_student">
+        Name: <input type="text" name="student_name">
+        <button type="submit">Add</button>
+    </form>
+
+    <h3>Delete Student</h3>
+    <form method="post">
+        <input type="hidden" name="action" value="delete_student">
+        ID: <input type="text" name="student_id">
+        <button type="submit">Delete</button>
+    </form>
+
+    <h3>Update Student</h3>
+    <form method="post">
+        <input type="hidden" name="action" value="update_student">
+        ID: <input type="text" name="student_id">
+        New Name: <input type="text" name="new_name">
+        <button type="submit">Update</button>
+    </form>
+
+    <h3>Add Course</h3>
+    <form method="post">
+        <input type="hidden" name="action" value="add_course">
+        Student ID: <input type="text" name="stu_id">
+        Name: <input type="text" name="course_name">
+        Score: <input type="text" name="course_score">
+        <button type="submit">Add</button>
+    </form>
+
+    <h3>Delete Course</h3>
+    <form method="post">
+        <input type="hidden" name="action" value="delete_course">
+        ID: <input type="text" name="course_id">
+        <button type="submit">Delete</button>
+    </form>
+
+    <h3>Update Course</h3>
+    <form method="post">
+        <input type="hidden" name="action" value="update_course">
+        ID: <input type="text" name="course_id">
+        New Name: <input type="text" name="new_name">
+        New Score: <input type="text" name="new_score">
+        <button type="submit">Update</button>
+    </form>
+</body>
+</html>
