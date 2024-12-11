@@ -1,64 +1,26 @@
-from flask import Flask, render_template, request, redirect, session
-import sqlite3
+from flask import Flask, render_template, request, redirect, session, jsonify
+import psycopg2
 
 app = Flask(__name__)
 app.secret_key = 'inkey'
 
+# Database configuration
+DATABASE_CONFIG = {
+    "database": "data",
+    "user": "admin",
+    "password": "123456",
+    "host": "127.0.0.1",
+    "port": "54321"
+}
 
-@app.route('/init')
-def init_db():
-    print("Initializing database...")
-
-    conn = sqlite3.connect('example.db')
-    cursor = conn.cursor()
-
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS students (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        student_name TEXT NOT NULL UNIQUE,
-        student_password TEXT NOT NULL
-    )''')
-
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS courses (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        stu_id INTEGER NOT NULL,
-        course_name TEXT NOT NULL,
-        course_score INTEGER NOT NULL,
-        FOREIGN KEY (stu_id) REFERENCES students(id)
-    )''')
-
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS admin (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL
-    )''')
-
-    cursor.execute("INSERT OR IGNORE INTO admin (username, password) VALUES (?, ?)", ('admin', 'admin123'))
-
-    students = [
-        ('Inkey', 'inkey233'),
-        ('W36', 'ww3636'),
-        ('Showmaker', 'twogoat')
-    ]
-    cursor.executemany("INSERT OR IGNORE INTO students (student_name, student_password) VALUES (?, ?)", students)
-
-    courses = [
-        (1, 1, 'Math', 85),
-        (2, 1, 'English', 92),
-        (3, 2, 'Math', 98),
-        (4, 2, 'English', 96),
-        (5, 3, 'Math', 78),
-        (6, 3, 'English', 88)
-    ]
-    cursor.executemany("INSERT OR IGNORE INTO courses (id, stu_id, course_name, course_score) VALUES (?, ?, ?, ?)",
-                       courses)
-
-    conn.commit()
-    conn.close()
-
-    return "数据库初始完成"
+# Utility function to connect to the database
+def get_db_connection():
+    try:
+        conn = psycopg2.connect(**DATABASE_CONFIG)
+        return conn
+    except psycopg2.OperationalError as e:
+        print(f"数据库连接失败: {e}")
+        return None
 
 
 @app.route('/', methods=['GET'])
@@ -69,6 +31,186 @@ def index():
         return redirect('/student')
     else:
         return redirect('/login')
+
+
+@app.route('/admin', methods=['GET'])
+def admin():
+    if 'admin_logged_in' not in session or not session['admin_logged_in']:
+        return redirect('/login')
+
+    conn = get_db_connection()
+    if not conn:
+        return "无法连接到数据库，请稍后重试。"
+
+    try:
+        cursor = conn.cursor()
+
+        # 获取学生数据
+        cursor.execute("SELECT id, student_name, gender, profession, student_password FROM students")
+        students = cursor.fetchall()
+
+        # 获取课程数据
+        cursor.execute("SELECT * FROM courses")
+        courses = cursor.fetchall()
+
+        # 获取统计数据
+        cursor.execute("SELECT COUNT(*) FROM students")
+        student_count = cursor.fetchone()[0] or 0
+
+        cursor.execute("SELECT COUNT(*) FROM courses")
+        course_count = cursor.fetchone()[0] or 0
+
+        # 获取性别分布数据
+        cursor.execute("SELECT COALESCE(gender, '未知') AS gender, COUNT(*) FROM students GROUP BY gender")
+        gender_data = cursor.fetchall()
+        gender_chart_data = {
+            "labels": [row[0] for row in gender_data],
+            "values": [row[1] for row in gender_data],
+        }
+
+        # 获取专业分布数据
+        cursor.execute("SELECT COALESCE(profession, '未知') AS profession, COUNT(*) FROM students GROUP BY profession")
+        profession_data = cursor.fetchall()
+        profession_chart_data = {
+            "labels": [row[0] for row in profession_data],
+            "values": [row[1] for row in profession_data],
+        }
+
+    except Exception as e:
+        print(f"数据库查询失败: {e}")
+        return "系统内部错误，请稍后重试。", 500
+    finally:
+        conn.close()
+
+    return render_template(
+        'admin.html',
+        students=students,
+        courses=courses,
+        student_count=student_count,
+        course_count=course_count,
+        gender_data=gender_chart_data,
+        profession_data=profession_chart_data
+    )
+
+
+
+
+
+@app.route('/update_student', methods=['POST'])
+def update_student():
+    student_id = request.form.get('id')
+    name = request.form.get('name')
+    gender = request.form.get('gender')
+    profession = request.form.get('profession')
+    password = request.form.get('password')
+
+    conn = get_db_connection()
+    if not conn:
+        return "无法连接到数据库，请稍后重试。"
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            UPDATE students
+            SET student_name = %s, gender = %s, profession = %s, student_password = %s
+            WHERE id = %s
+        ''', (name, gender, profession, password, student_id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"更新学生信息失败: {e}")
+        return "更新失败"
+    finally:
+        conn.close()
+
+    return redirect('/admin')
+
+@app.route('/add_student', methods=['POST'])
+def add_student():
+    name = request.form.get('name')
+    gender = request.form.get('gender')
+    profession = request.form.get('profession')
+    password = request.form.get('password')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO students (student_name, gender, profession, student_password) VALUES (%s, %s, %s, %s)", (name, gender, profession, password))
+    conn.commit()
+    conn.close()
+    return redirect('/admin')
+
+@app.route('/add_course', methods=['POST'])
+def add_course():
+    student_id = request.form.get('student_id')
+    course_name = request.form.get('course_name')
+    score = request.form.get('score')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO courses (stu_id, course_name, course_score) VALUES (%s, %s, %s)", (student_id, course_name, score))
+    conn.commit()
+    conn.close()
+    return redirect('/admin')
+
+
+@app.route('/update_course', methods=['POST'])
+def update_course():
+    course_id = request.form.get('id')
+    student_id = request.form.get('student_id')
+    course_name = request.form.get('course_name')
+    score = request.form.get('score')
+
+    conn = get_db_connection()
+    if not conn:
+        return "无法连接到数据库，请稍后重试。"
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            UPDATE courses
+            SET stu_id = %s, course_name = %s, course_score = %s
+            WHERE id = %s
+        ''', (student_id, course_name, score, course_id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"更新课程信息失败: {e}")
+        return "更新失败"
+    finally:
+        conn.close()
+
+    return redirect('/admin')
+
+
+@app.route('/delete', methods=['POST'])
+def delete_record():
+    record_type = request.form.get('type')  # 获取记录类型
+    record_id = request.form.get('id')     # 获取记录 ID
+
+    if not record_type or not record_id:
+        return "参数错误，请重试。", 400
+
+    conn = get_db_connection()
+    if not conn:
+        return "无法连接到数据库，请稍后重试。", 500
+
+    cursor = conn.cursor()
+    try:
+        if record_type == 'student':
+            cursor.execute("DELETE FROM students WHERE id = %s", (record_id,))
+        elif record_type == 'course':
+            cursor.execute("DELETE FROM courses WHERE id = %s", (record_id,))
+        else:
+            return "无效的记录类型。", 400
+
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"删除失败: {e}")
+        return "删除失败，请检查记录是否存在或联系管理员。", 500
+    finally:
+        conn.close()
+
+    return redirect('/admin')
+
 @app.route('/student', methods=['GET', 'POST'])
 def student():
     student_name = request.args.get('student_name', '')
@@ -83,7 +225,7 @@ def student():
         query += ' WHERE students.student_name = ?'
         params = (student_name,)
 
-    conn = sqlite3.connect('example.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(query, params)
@@ -95,62 +237,6 @@ def student():
 
     return render_template('student.html', results=results, student_name=student_name)
 
-
-@app.route('/admin', methods=['GET', 'POST'])
-def teacher():
-    if 'admin_logged_in' not in session or not session['admin_logged_in']:
-        return redirect('/login')
-
-    conn = sqlite3.connect('example.db')
-    cursor = conn.cursor()
-
-    if request.method == 'POST':
-        action = request.form.get('action')
-
-        if action == 'add_student':
-            student_name = request.form.get('student_name')
-            cursor.execute("INSERT INTO students (student_name, student_password) VALUES (?, ?)", (student_name, '12345678',))
-
-        elif action == 'delete_student':
-            student_id = request.form.get('student_id')
-            cursor.execute("DELETE FROM students WHERE id = ?", (student_id,))
-
-        elif action == 'update_student':
-            student_id = request.form.get('student_id')
-            new_name = request.form.get('new_name')
-            cursor.execute("UPDATE students SET student_name = ? WHERE id = ?", (new_name, student_id))
-
-        elif action == 'add_course':
-            stu_id = request.form.get('stu_id')
-            course_name = request.form.get('course_name')
-            course_score = request.form.get('course_score')
-            cursor.execute("INSERT INTO courses (stu_id, course_name, course_score) VALUES (?, ?, ?)",
-                           (stu_id, course_name, course_score))
-
-        elif action == 'delete_course':
-            course_id = request.form.get('course_id')
-            cursor.execute("DELETE FROM courses WHERE id = ?", (course_id,))
-
-        elif action == 'update_course':
-            course_id = request.form.get('course_id')
-            new_name = request.form.get('new_name')
-            new_score = request.form.get('new_score')
-            cursor.execute("UPDATE courses SET course_name = ?, course_score = ? WHERE id = ?",
-                           (new_name, new_score, course_id))
-
-        conn.commit()
-
-    cursor.execute("SELECT * FROM students")
-    students = cursor.fetchall()
-
-    cursor.execute("SELECT * FROM courses")
-    courses = cursor.fetchall()
-
-    conn.close()
-
-    return render_template('admin.html', students=students, courses=courses)
-
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
@@ -158,34 +244,37 @@ def login():
         username = request.form['username']
         password = request.form['password']
         user_type = request.form['user_type']
-        if user_type == 'student':
-            conn = sqlite3.connect('example.db')
-            cursor = conn.cursor()
-            query = f"SELECT * FROM students WHERE student_name = '{username}' AND student_password = '{password}'"
-            cursor.execute(query)
-            stu = cursor.fetchone()
+
+        conn = get_db_connection()
+        if not conn:
+            return "无法连接到数据库，请稍后重试。"
+
+        cursor = conn.cursor()
+        try:
+            if user_type == 'student':
+                query = "SELECT * FROM students WHERE student_name = %s AND student_password = %s"
+                cursor.execute(query, (username, password))
+                stu = cursor.fetchone()
+                if stu:
+                    session['student_logged_in'] = True
+                    return redirect('/student')
+                else:
+                    error = "错误的账号或密码"
+
+            elif user_type == 'teacher':
+                query = "SELECT * FROM admin WHERE username = %s AND password = %s"
+                cursor.execute(query, (username, password))
+                admin = cursor.fetchone()
+                if admin:
+                    session['admin_logged_in'] = True
+                    session['admin_username'] = username
+                    return redirect('/admin')
+                else:
+                    error = "错误的账号或密码"
+        except Exception as e:
+            print(f"查询失败: {e}")
+        finally:
             conn.close()
-
-            if stu:
-                session['student_logged_in'] = True
-                return redirect('/student')
-            else:
-                error = "错误的账号或密码"
-
-        if user_type == 'teacher':
-            conn = sqlite3.connect('example.db')
-            cursor = conn.cursor()
-            query = f"SELECT * FROM admin WHERE username = '{username}' AND password = '{password}'"
-            cursor.execute(query)
-            admin = cursor.fetchone()
-            conn.close()
-
-            if admin:
-                session['admin_logged_in'] = True
-                session['admin_username'] = username
-                return redirect('/admin')
-            else:
-                error = "错误的账号或密码"
 
     return render_template('index.html', error=error)
 

@@ -2,182 +2,378 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>教师管理后台</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f8f9fa;
-        }
-        h1, h2 {
-            text-align: center;
             color: #333;
+            display: flex;
         }
-        table {
-            width: 80%;
-            margin: 20px auto;
-            border-collapse: collapse;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            background: #fff;
+
+        /* 左侧导航栏样式 */
+        .sidebar {
+            width: 150px;
+            background-color: #007bff;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
-        th, td {
-            padding: 12px;
-            border: 1px solid #ddd;
+
+        .sidebar h2 {
+            margin: 0 0 20px;
+            font-size: 1.3em;
             text-align: center;
         }
+
+        .sidebar a {
+            text-decoration: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 1em;
+            background-color: #0056b3;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            background-color: #003f8f;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
         th {
             background-color: #007bff;
             color: white;
         }
+
         tr:hover {
             background-color: #f1f1f1;
         }
-        form {
-            width: 60%;
-            margin: 20px auto;
-            padding: 20px;
-            border: 1px solid #ddd;
-            background: #fff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
-        label {
-            display: inline-block;
-            width: 100px;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        input[type="text"], input[type="number"] {
-            width: calc(100% - 120px);
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
+
+        button.action-btn {
+            padding: 5px 10px;
+            font-size: 0.9em;
             border: none;
-            padding: 10px 20px;
-            cursor: pointer;
             border-radius: 4px;
+            cursor: pointer;
+            color: white;
         }
-        button:hover {
-            background-color: #0003b3;
+
+        .btn-delete {
+            background-color: #dc3545;
         }
-        .section {
-            margin: 40px 0;
+
+        .btn-delete:hover {
+            background-color: #a71d2a;
+        }
+
+        .btn-edit {
+            background-color: #28a745;
+        }
+
+        .btn-edit:hover {
+            background-color: #1e7e34;
+        }
+
+        /* 模态框样式 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            display: none; /* 默认隐藏 */
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: #007bff;
+        }
+
+        .modal-close {
+            float: right;
+            cursor: pointer;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .modal-close:hover {
+            color: #0056b3;
+        }
+
+        .modal-footer {
+            margin-top: 15px;
+            text-align: right;
+        }
+
+        .modal-footer button {
+            margin-left: 10px;
         }
     </style>
+    <script type="text/javascript" src="/static/js/echarts.js"></script>
 </head>
 <body>
-    <h1>管理后台</h1>
-
-    <!-- 学生表 -->
-    <h2>学生信息</h2>
-    <table>
-        <tr>
-            <th>编号</th>
-            <th>姓名</th>
-            <th>密码</th>
-        </tr>
-        {% for student in students %}
-        <tr>
-            <td>{{ student[0] }}</td>
-            <td>{{ student[1] }}</td>
-            <td>{{ student[2] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-
-    <!-- 课程表 -->
-    <h2>课程信息</h2>
-    <table>
-        <tr>
-            <th>编号</th>
-            <th>学生编号</th>
-            <th>课程名</th>
-            <th>成绩</th>
-        </tr>
-        {% for course in courses %}
-        <tr>
-            <td>{{ course[0] }}</td>
-            <td>{{ course[1] }}</td>
-            <td>{{ course[2] }}</td>
-            <td>{{ course[3] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-
-    <!-- 添加学生 -->
-    <div class="section">
-        <form method="post">
-            <input type="hidden" name="action" value="add_student">
-            <label for="student_name">学生姓名：</label>
-            <input type="text" id="student_name" name="student_name" required>
-            <button type="submit">添加学生</button>
-        </form>
+    <!-- 左侧导航栏 -->
+    <div class="sidebar">
+        <h2>教务管理后台</h2>
+        <a href="#home" class="active" onclick="showSection('home')">首页</a>
+        <a href="#students" onclick="showSection('students')">学生列表</a>
+        <a href="#courses" onclick="showSection('courses')">课程列表</a>
     </div>
 
-    <!-- 删除学生 -->
-    <div class="section">
-        <form method="post">
-            <input type="hidden" name="action" value="delete_student">
-            <label for="student_id">学生编号：</label>
-            <input type="number" id="student_id" name="student_id" required>
-            <button type="submit">删除学生</button>
-        </form>
+    <!-- 主内容区域 -->
+    <!-- 首页 -->
+    <div id="home" class="section active">
+        <h1>首页</h1>
+        <p>学生总数：{{ student_count }}</p>
+        <p>课程总数：{{ course_count }}</p>
+
+    <!-- 添加饼图部分 -->
+        <div class="chart-container">
+            <h2>学生性别分布</h2>
+            <canvas id="genderChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h2>学生专业分布</h2>
+            <canvas id="professionChart"></canvas>
+        </div>
     </div>
 
-    <!-- 更新学生 -->
-    <div class="section">
-        <form method="post">
-            <input type="hidden" name="action" value="update_student">
-            <label for="student_id_update">学生编号：</label>
-            <input type="number" id="student_id_update" name="student_id" required>
-            <label for="new_name">新姓名：</label>
-            <input type="text" id="new_name" name="new_name" required>
-            <button type="submit">更新学生</button>
-        </form>
+        <!-- 学生列表 -->
+        <div id="students" class="section">
+            <h1>学生列表</h1>
+            <table>
+                <tr>
+                    <th>编号</th>
+                    <th>姓名</th>
+                    <th>性别</th>
+                    <th>专业</th>
+                    <th>密码</th>
+                    <th>操作</th>
+                </tr>
+                {% for student in students %}
+                <tr>
+                    <td>{{ student[0] }}</td>
+                    <td>{{ student[1] }}</td>
+                    <td>{{ student[2] }}</td>
+                    <td>{{ student[3] }}</td>
+                    <td>{{ student[4] }}</td>
+                    <td>
+                        <button class="action-btn btn-edit" onclick="openEditModal('student', ['{{ student[0] }}', '{{ student[1] }}', '{{ student[2] }}', '{{ student[3] }}', '{{ student[4] }}'])">编辑</button>
+                        <button class="action-btn btn-delete" onclick="openDeleteModal('student', '{{ student[0] }}')">删除</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            <div class="form-container">
+                <form action="/add_student" method="post">
+                    <label for="student_name">姓名:</label>
+                    <input type="text" id="student_name" name="name" required>
+                    <label for="gender">性别:</label>
+                    <input type="text" id="gender" name="gender" required>
+                    <label for="profession">专业:</label>
+                    <input type="text" id="profession" name="profession" required>
+                    <label for="password">密码:</label>
+                    <input type="text" id="password" name="password" required>
+                    <button type="submit">添加学生</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 课程列表 -->
+        <div id="courses" class="section">
+            <h1>课程列表</h1>
+            <table>
+                <tr>
+                    <th>学生编号</th>
+                    <th>课程名</th>
+                    <th>成绩</th>
+                    <th>操作</th>
+                </tr>
+                {% for course in courses %}
+                <tr>
+                    <td>{{ course[1] }}</td>
+                    <td>{{ course[2] }}</td>
+                    <td>{{ course[3] }}</td>
+                    <td>
+                        <button class="action-btn btn-edit" onclick="openEditModal('course', ['{{ course[0] }}', '{{ course[1] }}', '{{ course[2] }}', '{{ course[3] }}'])">编辑</button>
+                        <button class="action-btn btn-delete" onclick="openDeleteModal('course', '{{ course[0] }}')">删除</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            <div class="form-container">
+                <form action="/add_course" method="post">
+                    <label for="student_id">学生编号:</label>
+                    <input type="text" id="student_id" name="student_id" required>
+                    <label for="course_name">课程名:</label>
+                    <input type="text" id="course_name" name="course_name" required>
+                    <label for="score">成绩:</label>
+                    <input type="number" id="score" name="score" required>
+                    <button type="submit">添加课程</button>
+                </form>
+            </div>
+        </div>
     </div>
 
-    <!-- 添加课程 -->
-    <div class="section">
-        <form method="post">
-            <input type="hidden" name="action" value="add_course">
-            <label for="stu_id">学生编号：</label>
-            <input type="number" id="stu_id" name="stu_id" required>
-            <label for="course_name">课程名：</label>
-            <input type="text" id="course_name" name="course_name" required>
-            <label for="course_score">课程成绩：</label>
-            <input type="number" id="course_score" name="course_score" required>
-            <button type="submit">添加课程</button>
-        </form>
+    <!-- 模态框 -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">确认删除</span>
+                <span class="modal-close" onclick="closeModal()">×</span>
+            </div>
+            <div class="modal-body">
+                <form id="modal-form" action="/delete" method="post">
+                    <div id="modal-input-container">
+                        <!-- 删除确认内容 -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" onclick="closeModal()">取消</button>
+                        <button type="submit">确认</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
-    <!-- 删除课程 -->
-    <div class="section">
-        <form method="post">
-            <input type="hidden" name="action" value="delete_course">
-            <label for="course_id">课程编号：</label>
-            <input type="number" id="course_id" name="course_id" required>
-            <button type="submit">删除课程</button>
-        </form>
-    </div>
+    <script>
+        // 检查后端数据是否有效，避免在其他页面渲染饼图时报错
+        if (document.getElementById('genderChart')) {
+            const genderData = JSON.parse(`{{ gender_data | tojson | safe }}`);
+            const professionData = JSON.parse(`{{ profession_data | tojson | safe }}`);
 
-    <!-- 更新课程 -->
-    <div class="section">
-        <form method="post">
-            <input type="hidden" name="action" value="update_course">
-            <label for="course_id_update">课程编号：</label>
-            <input type="number" id="course_id_update" name="course_id" required>
-            <label for="new_course_name">新课程名：</label>
-            <input type="text" id="new_course_name" name="new_name" required>
-            <label for="new_score">新成绩：</label>
-            <input type="number" id="new_score" name="new_score" required>
-            <button type="submit">更新课程</button>
-        </form>
-    </div>
+
+        // 渲染性别饼图
+        const genderCtx = document.getElementById('genderChart').getContext('2d');
+        new Chart(genderCtx, {
+            type: 'pie',
+            data: {
+                labels: genderData.labels,
+                datasets: [{
+                    data: genderData.values, // 修正为 values
+                    backgroundColor: ['#007bff', '#28a745', '#dc3545']
+                }]
+            }
+        });
+
+        // 渲染专业饼图
+        const professionCtx = document.getElementById('professionChart').getContext('2d');
+        new Chart(professionCtx, {
+            type: 'pie',
+            data: {
+                labels: professionData.labels,
+                datasets: [{
+                    data: professionData.values, // 修正为 values
+                    backgroundColor: ['#ffc107', '#6c757d', '#17a2b8', '#007bff']
+                }]
+            }
+        });
+    }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            document.querySelectorAll('.sidebar a').forEach(link => link.classList.remove('active'));
+            document.querySelector(`.sidebar a[href="#${sectionId}"]`).classList.add('active');
+        }
+
+        function openEditModal(type, data) {
+            const modal = document.getElementById('modal');
+            const form = document.getElementById('modal-form');
+            const container = document.getElementById('modal-input-container');
+            form.method = "post";
+            container.innerHTML = '';
+
+            if (type === 'student') {
+                form.action = "/update_student";
+                container.innerHTML = `
+                    <input type="hidden" name="id" value="${data[0]}">
+                    <label>姓名:</label><input type="text" name="name" value="${data[1]}" required>
+                    <label>性别:</label><input type="text" name="gender" value="${data[2]}" required>
+                    <label>专业:</label><input type="text" name="profession" value="${data[3]}" required>
+                    <label>密码:</label><input type="text" name="password" value="${data[4]}" required>
+                `;
+            } else if (type === 'course') {
+                form.action = "/update_course";
+                container.innerHTML = `
+                    <input type="hidden" name="id" value="${data[0]}">
+                    <label>学生编号:</label><input type="text" name="student_id" value="${data[1]}" required>
+                    <label>课程名:</label><input type="text" name="course_name" value="${data[2]}" required>
+                    <label>成绩:</label><input type="number" name="score" value="${data[3]}" required>
+                `;
+            }
+
+            modal.classList.add('active');
+        }
+
+        function openDeleteModal(type, id) {
+            const modal = document.getElementById('modal');
+            const form = document.getElementById('modal-form');
+            const container = document.getElementById('modal-input-container');
+            form.action = "/delete";
+            form.method = "post";
+            container.innerHTML = `
+                <input type="hidden" name="type" value="${type}">
+                <input type="hidden" name="id" value="${id}">
+                <p>确定删除该${type === 'course' ? '课程' : '记录'}吗？</p>
+            `;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+    </script>
 </body>
 </html>
